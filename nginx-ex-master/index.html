@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mikkena Global Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background: #87ceeb;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .title {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 20%;
+            background: #654321;
+        }
+
+        .player {
+            position: absolute;
+            bottom: 20%;
+            left: 10%;
+            width: 50px;
+            height: 100px;
+        }
+
+        .head {
+            position: absolute;
+            top: 0;
+            left: 25%;
+            width: 50%;
+            height: 25%;
+            background: #ffcc99;
+            border-radius: 50%;
+        }
+
+        .glasses {
+            position: absolute;
+            top: 10%;
+            left: 5%;
+            width: 90%;
+            height: 15%;
+            background: black;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .glass {
+            width: 40%;
+            height: 100%;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .body {
+            position: absolute;
+            top: 25%;
+            left: 45%;
+            width: 10%;
+            height: 40%;
+            background: black;
+        }
+
+        .arms {
+            position: absolute;
+            top: 30%;
+            left: 0%;
+            width: 100%;
+            height: 10%;
+            background: black;
+        }
+
+        .leg {
+            position: absolute;
+            top: 65%;
+            width: 10%;
+            height: 30%;
+            background: black;
+        }
+
+        .leg.left {
+            left: 30%;
+        }
+
+        .leg.right {
+            right: 30%;
+        }
+
+        .cape {
+            position: absolute;
+            top: 10%;
+            left: 15%;
+            width: 70%;
+            height: 80%;
+            background: red;
+            border-radius: 5px;
+            z-index: -1;
+            display: none;
+        }
+
+        .obstacle {
+            position: absolute;
+            bottom: 20%;
+            width: 50px;
+            background: black;
+        }
+
+        .tall-obstacle {
+            height: 100px;
+        }
+
+        .short-obstacle {
+            height: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="title">Mikkena Global Game</div>
+        <div class="ground"></div>
+        <div class="player" id="player">
+            <div class="head">
+                <div class="glasses">
+                    <div class="glass"></div>
+                    <div class="glass"></div>
+                </div>
+            </div>
+            <div class="cape" id="cape"></div>
+            <div class="body"></div>
+            <div class="arms"></div>
+            <div class="leg left"></div>
+            <div class="leg right"></div>
+        </div>
+        <div class="obstacle short-obstacle" id="obstacle"></div>
+    </div>
+    <script>
+        const player = document.getElementById('player');
+        const cape = document.getElementById('cape');
+        const obstacle = document.getElementById('obstacle');
+        let isJumping = false;
+        let jumpCount = 0;
+        let score = 0;
+        let currentHeight = 0;
+        let velocity = 0;
+
+        // Set up obstacle movement
+        obstacle.style.left = '100%';
+
+        function moveObstacle() {
+            let obstacleLeft = parseInt(getComputedStyle(obstacle).left);
+
+            if (obstacleLeft <= -50) {
+                // Randomly decide if the next obstacle is tall or short
+                obstacle.style.left = '100%';
+                if (Math.random() < 0.5) {
+                    obstacle.className = 'obstacle tall-obstacle';
+                } else {
+                    obstacle.className = 'obstacle short-obstacle';
+                }
+                score += 1;
+                console.log('Score:', score);
+            } else {
+                obstacle.style.left = `${obstacleLeft - 10}px`;
+            }
+
+            checkCollision();
+        }
+
+        setInterval(moveObstacle, 30);
+
+        function jump() {
+            if (jumpCount >= 2) return;
+
+            jumpCount++;
+            if (jumpCount === 2) activateCape();
+
+            velocity = 15; // Set upward velocity
+            isJumping = true;
+        }
+
+        function updatePlayerPosition() {
+            if (isJumping) {
+                currentHeight += velocity;
+                velocity -= 1; // Gravity effect
+                if (currentHeight <= 0) {
+                    currentHeight = 0;
+                    velocity = 0;
+                    isJumping = false;
+                    jumpCount = 0;
+                    deactivateCape();
+                }
+                player.style.bottom = `calc(20% + ${currentHeight}px)`;
+            }
+        }
+
+        setInterval(updatePlayerPosition, 30);
+
+        function activateCape() {
+            cape.style.display = 'block';
+        }
+
+        function deactivateCape() {
+            cape.style.display = 'none';
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                jump();
+            }
+        });
+
+        function checkCollision() {
+            const playerRect = player.getBoundingClientRect();
+            const obstacleRect = obstacle.getBoundingClientRect();
+
+            if (
+                playerRect.left < obstacleRect.right &&
+                playerRect.right > obstacleRect.left &&
+                playerRect.bottom > obstacleRect.top
+            ) {
+                alert('Game Over! Your score: ' + score);
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
